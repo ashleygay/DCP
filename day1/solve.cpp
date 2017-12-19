@@ -71,18 +71,15 @@ void solve(std::stack<int>& s, std::queue<int>& q)
 	print_queue(q);
 	std::cout << std::endl;
 
-	// We have the good order but reversed
-	// we use the stack to change it
-	while (q.size() != 0) {
-		int elt = q.front();
-		q.pop();
-		s.push(elt);
+	if ((q.size() + s.size()) % 2 != 0) {
+		// We have the good order but reversed
+		// we use the stack to change it
+		while (q.size() != 0) {
+			int elt = q.front();
+			q.pop();
+			s.push(elt);
+		}
 	}
-
-	std::cout << "Stack in wrong order";
-	print_stack(s);
-	std::cout << std::endl;
-
 
 	// We put them back in the queue, in the good order
 	while (s.size() != 1) {
