@@ -1,0 +1,3 @@
+Implement a XOR linked list
+	- get(int i)
+	- add (Element elt)

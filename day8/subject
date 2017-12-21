@@ -1,3 +1,4 @@
-Implement a XOR linked list
-	- get(int i)
-	- add (Element elt)
+Asked by Google.
+
+A unival tree is a tree where all nodes have the same value.
+Given the root of a binary tree count the numbers of unival subtrees
