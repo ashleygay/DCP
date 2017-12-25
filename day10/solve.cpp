@@ -1,4 +1,9 @@
-#include <iyostream>
+#include <iostream>
+#include <iterator>
+#include <list>
+#include <mutex>
+#include <atomic>
+#include <future>
 
 /* TODO: 2 versions, one with lock/mutex the other with a lock free queue
  */
@@ -8,69 +13,78 @@ void print()
 	std::cout << "Asynchronous call" << std::endl;
 }
 
-template <typename T = void(*)()>
 struct Job
 {
+	Job(void(*function)(), int _delay): f(function), delay(_delay){}
+
+	void(*f)();
 	int delay;
-	T f;
 };
 
-
-template <typename T = void(*)()>
 class Scheduler
 {
 public:
-	void schedule(T f, int delay)
+	~Scheduler()
+	{
+		stopScheduling();
+	}
+
+	void schedule(void(*f)(), int delay)
 	{
 		m.lock();
-		jobs.emplace_back(d, delay);
+		jobs.push_back(Job(f, delay));
 		m.unlock();
 	}
 
 	void stopScheduling()
 	{
 		running = false;
+		future.get();
 	}
 
 	void startScheduling()
 	{
-		future = std::launch(std::launch::async,
-			Scheduler::loop, std::ref(jobs));
+		future = std::async(std::launch::async,
+			&Scheduler::loop, this);
 
 		running = true;
 	}
 private:
-	static void loop(std::list<Job<T>>& jobs)
+	void loop()
 	{
 		while (running) {
 			m.lock();
-			for (Job& j : jobs) {
-				if (j.delay == 0) {
-					j.f();
+
+			for (auto j = jobs.begin() ; j != jobs.end(); ++j) {
+				if (j->delay == 0) {
+					j->f();
 				}
-				--j.delay;
+				--j->delay;
 			}
+
 			m.unlock();
+			using namespace std::chrono_literals;
+			std::this_thread::sleep_for(1ms);
 		}
 	}
-private:
-	std::mutex m;
-	std::list<Job<T>> jobs;
 
-	std::future<void> future;
+private:
+	std::list<Job> jobs;
+
 	std::atomic<bool> running;
+	std::mutex m;
+	std::future<void> future;
 };
 
 
 int main()
 {
 	Scheduler s;
-	s.schedule();
-	s.schedule();
-	s.schedule();
-	s.schedule();
-
+	s.startScheduling();
+	s.schedule(print, 1000);
 	while (true) {
-		std::cout << "Test " << std::endl;
+		s.schedule(print, 2000);
+		using namespace std::chrono_literals;
+		std::this_thread::sleep_for(1ms);
 	}
 }
