@@ -1,0 +1,8 @@
+Asked by twitter.
+
+Implement an autocomplete system. That is, given a query string s and a dictionnary
+of all possible query strings. return all strings in the dictionnary that have s as a
+prefix.
+
+Hint: Try preprocessing the dictionnary into a more efficient data structure to
+speed up queries
