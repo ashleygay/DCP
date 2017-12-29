@@ -8,7 +8,8 @@ int solve(int* tab, size_t size)
 
 	// We iterate over the table.
 	for (int i = 0; i < size ; ++i) {
-		
+		//TODO: Iterate over the left side
+		//TODO: Iterate over the rigt side
 	}
 	return max_sum;
 }
@@ -18,6 +19,4 @@ int main()
 	int tab[4] = [5,1,1,5]; // Result should be 5 + 5
 	size_t size = sizeof(tab);
 	std::cout << "Sum is : " << solve(tab, size) << std::endl;
-
-
 }
