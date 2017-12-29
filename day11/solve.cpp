@@ -1,34 +1,36 @@
+#include <iostream>
 #include <string>
 #include <list>
 
 class TrieNode
 {
-public:
-	TrieNode(char edge, std::string s): edgeValue(edge), value(s) {}
-	TrieNode(): edgeValue('\0'), value("") {}
-
-	//TODO: what is in the string ?
-	// probably only the relevant parts
-	void addChildNode(char edge, std::string s)
+	// Used by traverse() as a return type
+	// The index is the next character in the string.
+	struct TraverseResult
 	{
-		TrieNode* newchild = new TrieNode(edge, s);
+		TrieNode* ptr;
+		int index;
+	};
+
+
+public:
+	TrieNode(char edge): edgeValue(edge) {}
+	TrieNode(): edgeValue('\0') {}
+
+	void addChildNode(char edge)
+	{
+		TrieNode* newchild = new TrieNode(edge);
 		children.push_back(newchild);
 	}
 
-	std::list<std::string> query(std::string& s)
+	std::list<std::string> query(const std::string& s)
 	{
-		TrieNode* current = this;
+		auto result = traverse(s);
+		const TrieNode* current = result.ptr;
+		if (!current)
+			return {};
 		std::list<std::string> queried;
 
-		for (auto b = s.begin(); b != s.end() && current; ++b) {
-			auto c = *b;
-			current = current->getNextNode(c);
-			if (!current) {
-				// The edges of `current' does no have any edge
-				// with c as a character.
-				return {};
-			}
-		}
 		// We have advanced in the tree, depending on the values in s.
 		// We return all the possible substrings.
 		queried = current->getAllSubstrings();
@@ -40,35 +42,61 @@ public:
 		return queried;
 	}
 
-	// This function tests if the edges of this trienode have the
-	// character c. In case of success it returns the pointer to the next
-	// node that would be useful to walk the tree.
-	TrieNode* getNextNode(char c)
+	TraverseResult traverse(const std::string& s)
 	{
-		for (auto b = children.begin(); b != children.end(); ++b) {
-			if ((*b)->edgeValue == c)
-				return *b; //We return the address of the node
+		// We traverse the tree until we run out of characters,
+		// in that case we return the last node that we traversed.
+
+		TrieNode* current = this;
+		int i = 0;
+		for (auto c = s.begin(); c != s.end() && current; ++c) {
+			auto tmp = current->getNextNode(*c);
+			if (!tmp)
+				return {current, i};
+			current = current->getNextNode(*c);
+			++i;
 		}
-		return nullptr;
+		return {current, i};
 	}
 
-	std::list<std::string> getAllSubstrings()
+	std::list<std::string> getAllSubstrings() const
 	{
 		// From the current node, we get all the possible substrings
 		// using a depth-first traversal.
-		for (auto n = children.begin(); n != children.end(); ++n){
-			//TODO
+		// Do a recursive call.
+		std::list<std::string> l;
+
+		for (auto n = children.begin(); n != children.end(); ++n) {
+			char c = (*n)->getEdgeValue();
+			auto tmp = (*n)->getAllSubstrings();
+			for (auto i = tmp.begin(); i != tmp.end(); ++i) {
+				*i = c + *i;
+			}
+			// We add elements to the list
+			l.splice(l.begin(), tmp);
 		}
-		return {"tmp", "str"};
+
+		return l;
 	}
 
 	char getEdgeValue() const {return edgeValue;}
+
+	// This function tests if the edges of this trienode have the
+	// character c. In case of success it returns the pointer to the next
+	// node that would be useful to walk the tree.
+	TrieNode* getNextNode(char c) const
+	{
+		for (auto b = children.begin(); b != children.end(); ++b) {
+			if ((*b)->edgeValue == c)
+				return *b; // We return the address of the node
+		}
+		return nullptr;
+	}
 
 private:
 	// Represents the value of the incoming edge to this node.
 	const char edgeValue;
 
-	std::string value;
 	std::list<TrieNode*> children;
 };
 
@@ -78,13 +106,21 @@ class Dictionnary
 public:
 	void addEntry(std::string s)
 	{
-		//t.addChild(s);
-		//TODO We traverse the tree until we run out of characters in s.
+		// We traverse the tree until we run out of characters in s.
 		// We check if the tree has edges, if it has, the string is
 		// already present in the tree and we stops.
-		// If it does not have any children or only one, we check it and
-		// we can either split it or add a new edge with the remainder
-		// of the string
+		// If it does not have any children or only one, we create it
+		// then we add node by node in the tree.
+		auto result = t.traverse(s);
+		TrieNode* current = result.ptr;
+		int index = result.index;
+		if (index >= s.size())
+			return; // String already present.
+
+		for (;index < s.size(); ++index) {
+			current->addChildNode(s[index]);
+			current = current->getNextNode(s[index]);
+		}
 	}
 
 	std::list<std::string> query(std::string s)
@@ -98,10 +134,14 @@ private:
 
 int main()
 {
-	Dictionnary d;
+	Dictionnary<TrieNode> d;
 	d.addEntry("string");
 	d.addEntry("stringest");
 	d.addEntry("stringer");
 
 	std::list<std::string> query = d.query("string");
+
+	for (auto b = query.begin(); b != query.end(); ++b) {
+		std::cout << *b << std::endl;
+	}
 }
