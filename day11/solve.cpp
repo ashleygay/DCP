@@ -36,7 +36,7 @@ public:
 	{
 		auto result = traverse(s);
 		const TrieNode* current = result.ptr;
-		if (!current)
+		if (current == this) // String is absent
 			return {};
 		std::list<std::string> queried;
 
@@ -48,6 +48,8 @@ public:
 		for (auto i = queried.begin(); i != queried.end(); ++i) {
 			*i = s + *i;
 		}
+		if (current->isEndOfWord())
+			queried.push_back(s);
 		return queried;
 	}
 
@@ -77,13 +79,25 @@ public:
 
 		for (auto n = children.begin(); n != children.end(); ++n) {
 			char c = (*n)->getEdgeValue();
-			auto tmp = (*n)->getAllSubstrings();
-			for (auto i = tmp.begin(); i != tmp.end(); ++i) {
-				*i = c + *i;
+			std::string s;
+			s.insert(0, sizeof(char), c);
+
+			auto substrs = (*n)->getAllSubstrings();
+			// If list is empty, we just add it to the list.
+			// It is a node without children.
+			if (substrs.empty())
+				substrs.push_back(s);
+			else {
+				for (auto i = substrs.begin();
+					i != substrs.end(); ++i) {
+					*i = s + *i;
+				}
+				if ((*n)->isEndOfWord())
+					substrs.push_back(s);
 			}
-			print_list(tmp);
+
 			// We add elements to the list
-			l.splice(l.begin(), tmp);
+			l.splice(l.begin(), substrs);
 		}
 
 		return l;
@@ -103,9 +117,14 @@ public:
 		return nullptr;
 	}
 
+	bool isEndOfWord() const {return end;}
+	void markEndOfWord() {end = true;}
+
+
 private:
 	// Represents the value of the incoming edge to this node.
 	const char edgeValue;
+	bool end = false;
 
 	std::list<TrieNode*> children;
 };
@@ -124,13 +143,12 @@ public:
 		auto result = t.traverse(s);
 		TrieNode* current = result.ptr;
 		int index = result.index;
-		if (index >= s.size())
-			return; // String already present.
 
 		for (;index < s.size(); ++index) {
 			current->addChildNode(s[index]);
 			current = current->getNextNode(s[index]);
 		}
+		current->markEndOfWord();
 	}
 
 	std::list<std::string> query(std::string s)
@@ -142,14 +160,26 @@ private:
 	T t;
 };
 
+template <typename D = Dictionnary<TrieNode>>
+void print_query(D& d, std::string s)
+{
+	std::cout << "Querying : " << s << std::endl;
+	std::list<std::string> q = d.query(s);
+	print_list(q);
+}
+
 int main()
 {
-	Dictionnary<TrieNode> d;
+	Dictionnary d;
 	d.addEntry("string");
 	d.addEntry("stringest");
 	d.addEntry("stringer");
+	d.addEntry("strigero");
+	d.addEntry("btringest");
+	d.addEntry("aaa");
+	d.addEntry("aaaaa");
 
-	std::list<std::string> query = d.query("string");
-	print_list(query);
-
+	print_query(d, "a");
+	print_query(d, "str");
+	print_query(d, "btringe");
 }
