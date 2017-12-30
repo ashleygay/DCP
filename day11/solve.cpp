@@ -2,6 +2,15 @@
 #include <string>
 #include <list>
 
+
+void print_list(std::list<std::string>& l)
+{
+	for (auto b = l.begin(); b != l.end(); ++b) {
+		std::cout << *b << std::endl;
+	}
+}
+
+
 class TrieNode
 {
 	// Used by traverse() as a return type
@@ -72,6 +81,7 @@ public:
 			for (auto i = tmp.begin(); i != tmp.end(); ++i) {
 				*i = c + *i;
 			}
+			print_list(tmp);
 			// We add elements to the list
 			l.splice(l.begin(), tmp);
 		}
@@ -140,8 +150,6 @@ int main()
 	d.addEntry("stringer");
 
 	std::list<std::string> query = d.query("string");
+	print_list(query);
 
-	for (auto b = query.begin(); b != query.end(); ++b) {
-		std::cout << *b << std::endl;
-	}
 }
