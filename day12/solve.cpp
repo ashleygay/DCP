@@ -2,15 +2,27 @@
 #include <array>
 #include <vector>
 
-using SolutionVector = std::vector<std::vector<int>>;
 
-const extern std::vector<int> def_steps = {1,2};
+// TODO create make_array
 
-template <int NbSteps = 4, std::vector<int> const& steps = def_steps>
+constexpr std::array<int, 2> def_steps = {1,2};
+
+template <int NbSteps = 4, std::array<int, 2> const& steps = def_steps>
 struct Solver
 {
+	using SolutionVector = std::vector<std::array<int, NbSteps>>;
 	constexpr SolutionVector solve()
 	{
+		int nbsteps = NbSteps;
+		std::array<int, steps[steps.size() - 1]>  solution = {};
+		// First we consider generating only unique solutions
+		// IEe: we consider 211 and 112 the same
+		// We can then generate all possibilities easily
+
+		for (auto step : steps) { // We iterate over the different steps.
+		}
+
+
 		return {{1,1,1,1}};
 	}
 };
