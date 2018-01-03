@@ -1,30 +1,34 @@
 #include <iostream>
 #include <random>
 
-
-
-
-int main()
+long double estimate_pi(int r)
 {
 	std::random_device rd;
 	std::mt19937 gen(rd());
 
-	int r = 500;
 	// Size of side of the the square
-	int size = 1000;
+	int size = 2 * r;
 	// We get a million points to try and fit inside the circle
-	size_t nb_points = 1000000;
+	size_t nb_points = size * size;
 
 	size_t points_inside = 0;
  	std::uniform_int_distribution<> dis(0, size);
 	for (size_t i = 0; i < nb_points; ++i) {
 		int x = dis(gen);
 		int y = dis(gen);
-		if ((x ^ 2 + y ^ 2) <= r ^ 2)
+		if ((x * x + y * y) < r * r)
 			++points_inside;
 	}
-	std::cout << "Points inside :" << points_inside << std::endl;
-	double pi = (points_inside * 4)/nb_points;
-	//printf("Ratio: %lf\n", pi);
-	printf("Ratio: %lf\n", pi);
+	return (points_inside * 4)/((double)(r * r));
+}
+
+
+int main()
+{
+	long double pi = estimate_pi(1000);
+	for (float i = 0; i < 100; ++i) {
+		pi += estimate_pi(1000);
+		pi /= 2.0;
+	}
+	printf("Pi estimate: %Lf\n", pi);
 }
