@@ -30,16 +30,18 @@ class Record
 template <size_t N = 5, typename T = int>
 class CyclicRecord
 {
+public:
 	CyclicRecord()
 	{
 		for (size_t i = 1; i < N - 1; ++i) {
-			_internal[i]->next = &_internal[i + 1];
-			_internal[i]->prev = &_internal[i - 1];
+			_internal[i].next = &_internal[i + 1];
+			_internal[i].prev = &_internal[i - 1];
 		}
-		start->next = ++start;
+		start->next = start + 1;
 		start->prev = end;
+
 		end->next = start;
-		end->prev = --end;
+		end->prev = end - 1;
 	}
 
 	template <typename Content = T>
@@ -50,16 +52,14 @@ class CyclicRecord
 		Content data;
 	};
 
-public:
 	void record(T id)
 	{
-/*
-		start->data = content;
-		auto tmp = 
-
-
+		auto old_start = start;
+		end->data = id;
 		end = end->prev;
-*/
+		start = end->next;
+		start->prev = end;
+		start->next = old_start;
 	}
 
 	T get_last(size_t index)
@@ -79,11 +79,11 @@ private:
 
 int main()
 {
-	Record r;
+	CyclicRecord r;
 	r.record(13);
 	r.record(14);
 	r.record(15);
-	std::cout << "Last : " << r.get_last(1) << std::endl;
-	std::cout << "Last : " << r.get_last(2) << std::endl;
-	std::cout << "Last : " << r.get_last(3) << std::endl;
+	std::cout << "Last 1st : " << r.get_last(1) << std::endl;
+	std::cout << "Last 2nd : " << r.get_last(2) << std::endl;
+	std::cout << "Last 3rd : " << r.get_last(3) << std::endl;
 }
