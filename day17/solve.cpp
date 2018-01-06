@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <iostream>
 
 
 struct FileIterators
@@ -13,10 +14,23 @@ struct FileIterators
 // the level of indentation (ie the number of \t that we want)
 int find_parent_directory(std::string& str, int beg, int indent)
 {
-	
+	int current_indent = indent;
+
+	// We want the root directory.
+	// It is necessarilly at the start.
+	if (indent == 0)
+		return 0;
 
 
-
+	while (current_indent != 0 && beg != 0) {
+		if (str[beg] == '\t')
+			--current_indent;
+		else
+			current_indent = indent;
+		--beg;
+	}
+	// We have found number of \t, we return and index into the word.
+	return (beg + indent);
 }
 
 
@@ -40,7 +54,8 @@ FileIterators get_file(std::string& str, int i)
 
 int main()
 {
-	std::string str = "dir\n\tsubdir1\n\tsubdir2\n\t\tfile.ext";
+//	std::string str = "dir\n\tsubdir1\n\tsubdir2\n\t\tfile.ext";
+	std::string str = "dir\n\tsubdir1\n\t\tfile1.ext\n\t\tsubsubdir1\n\tsubdir2\n\t\tsubsubdir2\n\t\t\tfile2.ext";
 	int path_max = 0;
 	for (int i = 0;i < str.size(); ++i) {
 
@@ -54,14 +69,21 @@ int main()
 			// Depending on the number of \t we want to get
 			// a different number of directories.
 
-			//TODO
-			// Somehow do a loop here
 			int indent = get_file_indent(str, beg);
+			size += (end - beg);
 
-			//TODO update size here
+			--indent;
+			// We stiil want to get the length of the root dir.
+			while (indent != -1) {
 
-			// We find the parent directory
-			int parent = find_parent_directory(str, indent, indent - 1);
+				// We find the parent directory
+				int parent = find_parent_directory(str, indent + 1, indent);
+				//TODO update size here
+				auto dir = get_file(str, beg);
+
+				size += (dir.end - dir.beg) + 1;
+				--indent;
+			}
 
 
 		}
@@ -72,4 +94,5 @@ int main()
 			path_max = size;
 
 	}
+	std::cout << "Maximum path size: " << path_max << std::endl;
 }
